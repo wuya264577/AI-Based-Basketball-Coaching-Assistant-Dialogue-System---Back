@@ -1,0 +1,3 @@
+This project aims to develop an AI-powered basketball coaching assistant dialogue system. The system will leverage advanced AI language model technology, focusing on intelligent dialogue development in the field of sports, particularly basketball. It will provide basketball-related
+knowledge, prioritizing content from Tongji University textbooks while also expanding cloud-based resources to enrich teaching materials. Additionally, the system will support conventional search functions, including digital textbooks with text and images, as well as video tutorials, to
+meet the diverse needs of users.
