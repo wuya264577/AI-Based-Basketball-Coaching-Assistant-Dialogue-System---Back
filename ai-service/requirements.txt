@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+pymysql
+redis
+python-dotenv
+cryptography
+uvicorn
+sentence-transformers
+faiss-cpu
