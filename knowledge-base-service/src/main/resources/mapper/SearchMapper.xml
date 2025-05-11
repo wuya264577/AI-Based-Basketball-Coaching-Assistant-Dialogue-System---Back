@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.micro.service.knowledge_base_service.mapper.SearchMapper">
+
+    <select id="searchByKeyword" parameterType="string" resultType="com.micro.service.knowledge_base_service.vo.SearchResult">
+        SELECT
+        ch.chapter_name AS chapterName,
+        se.section_name AS sectionName,
+        sub.subsection_name AS subsectionName,
+        c.content,
+        img.image_url AS imageUrl,
+        img.description AS imageDescription,
+        vid.video_url AS videoUrl,
+        vid.platform AS videoPlatform,
+        vid.description AS videoDescription
+        FROM content c
+        LEFT JOIN chapter ch ON c.chapter_id = ch.chapter_id
+        LEFT JOIN section se ON c.section_id = se.section_id
+        LEFT JOIN subsection sub ON c.subsection_id = sub.subsection_id
+        LEFT JOIN subsection_image img ON sub.subsection_id = img.subsection_id
+        LEFT JOIN subsection_video vid ON sub.subsection_id = vid.subsection_id
+        WHERE
+        ch.chapter_name LIKE CONCAT('%', #{keyword}, '%')
+        OR se.section_name LIKE CONCAT('%', #{keyword}, '%')
+        OR sub.subsection_name LIKE CONCAT('%', #{keyword}, '%')
+        OR c.content LIKE CONCAT('%', #{keyword}, '%')
+        OR img.description LIKE CONCAT('%', #{keyword}, '%')
+        OR vid.description LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+</mapper>
