@@ -32,7 +32,6 @@ public class ContentServiceImpl implements ContentService {
         String text = contentMapper.findContent(chapterId, sectionId, subsectionId);
         result.setTextContent(text);
 
-
         // 获取图片内容，处理空值的情况
         List<SubsectionImage> imageList = imageMapper.findBySubsectionId(subsectionId);
         List<SubsectionContentVO.ImageItem> images = (imageList == null) ? List.of() :
