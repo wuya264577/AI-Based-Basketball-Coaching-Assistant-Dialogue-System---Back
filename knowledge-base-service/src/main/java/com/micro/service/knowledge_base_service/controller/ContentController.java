@@ -29,6 +29,7 @@ public class ContentController {
         return ResponseEntity.ok(result);
     }
 
+
     @GetMapping("/by-section-name")
     public ResponseEntity<List<ContentWithSubsectionVO>> getContentBySectionName(
             @RequestParam String sectionName) {

@@ -9,6 +9,15 @@ public class SubsectionContentVO {
     private String textContent;
     private List<ImageItem> images;
     private List<VideoItem> videos;
+    private String subsectionName;
+
+    public String getSubsectionName() {
+        return subsectionName;
+    }
+
+    public void setSubsectionName(String subsectionName) {
+        this.subsectionName = subsectionName;
+    }
 
     public String getTextContent() {
         return textContent;

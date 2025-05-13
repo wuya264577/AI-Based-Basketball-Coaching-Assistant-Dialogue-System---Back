@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,9 +30,12 @@ public class ContentServiceImpl implements ContentService {
     public SubsectionContentVO getSubsectionContent(String chapterId, String sectionId, String subsectionId) {
         SubsectionContentVO result = new SubsectionContentVO();
 
-        // 获取文本内容
-        String text = contentMapper.findContent(chapterId, sectionId, subsectionId);
-        result.setTextContent(text);
+        // 获取文本内容和子章节名称
+        Map<String, Object> contentData = contentMapper.findContentWithSubsectionName(chapterId, sectionId, subsectionId);
+        if (contentData != null) {
+            result.setTextContent((String) contentData.get("content"));
+            result.setSubsectionName((String) contentData.get("subsection_name"));
+        }
 
         // 获取图片内容，处理空值的情况
         List<SubsectionImage> imageList = imageMapper.findBySubsectionId(subsectionId);
@@ -58,6 +62,7 @@ public class ContentServiceImpl implements ContentService {
 
         return result;
     }
+
 
     @Override
     public List<ContentWithSubsectionVO> getContentBySectionName(String sectionName) {
