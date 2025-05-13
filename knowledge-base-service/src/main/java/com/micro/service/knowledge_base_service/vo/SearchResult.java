@@ -1,6 +1,16 @@
 package com.micro.service.knowledge_base_service.vo;
 
 public class SearchResult {
+    private String subsectionId;
+
+    public String getSubsectionId() {
+        return subsectionId;
+    }
+
+    public void setSubsectionId(String subsectionId) {
+        this.subsectionId = subsectionId;
+    }
+
     private String chapterName;
     private String sectionName;
     private String subsectionName;

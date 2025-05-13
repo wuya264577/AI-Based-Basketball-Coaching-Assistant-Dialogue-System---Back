@@ -10,6 +10,7 @@
         se.section_name AS sectionName,
         sub.subsection_name AS subsectionName,
         c.content,
+        c.subsection_id AS subsectionId,
         img.image_url AS imageUrl,
         img.description AS imageDescription,
         vid.video_url AS videoUrl,
