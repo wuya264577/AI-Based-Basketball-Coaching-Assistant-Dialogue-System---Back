@@ -91,7 +91,7 @@ public class UserController {
 
         // 设置默认角色
         if (user.getRole() == null || user.getRole().isEmpty()) {
-            user.setRole("coach");
+            user.setRole("user");
         }
 
         // 默认头像
@@ -136,18 +136,13 @@ public class UserController {
         return "Authenticated as: " + username;
     }
 
-    @GetMapping("/player/test")
-    public String playerOnly() {
-        return "only player";
+    @GetMapping("/user/test")
+    public String userOnly() {
+        return "only user";
     }
 
     @GetMapping("/admin/test")
     public String adminOnly() {
         return "only admin";
-    }
-
-    @GetMapping("/coach/test")
-    public String coachOnly() {
-        return "only coach";
     }
 }

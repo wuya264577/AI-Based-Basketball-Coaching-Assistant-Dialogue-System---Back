@@ -25,8 +25,7 @@ public class CustomSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users/checkEmailRegistered").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/users/admin/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/api/users/coach/**").hasRole("COACH")
-                        .requestMatchers("/api/users/player/**").hasRole("PLAYER")
+                        .requestMatchers("/api/users/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // 加这一行！
