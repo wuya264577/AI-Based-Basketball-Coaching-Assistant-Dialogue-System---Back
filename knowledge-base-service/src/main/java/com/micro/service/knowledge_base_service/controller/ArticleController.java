@@ -52,4 +52,10 @@ public class ArticleController {
     public List<Article> getTop8ArticlesByViews() {
         return articleService.getTop8ByViews();
     }
+
+    // 获取上传时间最新的前8篇文章
+    @GetMapping("/recent/top8")
+    public List<Article> getTop8RecentArticles() {
+        return articleService.getTop8ByUploadTime();
+    }
 }

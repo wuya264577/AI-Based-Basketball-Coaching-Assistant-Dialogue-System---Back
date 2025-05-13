@@ -49,4 +49,9 @@ public class ArticleService {
         return articleRepository.findTop8ByOrderByViewsDesc();
     }
 
+    // 获取最新上传的前8篇文章
+    public List<Article> getTop8ByUploadTime() {
+        return articleRepository.findTop8ByOrderByUploadTimeDesc();
+    }
+
 }
