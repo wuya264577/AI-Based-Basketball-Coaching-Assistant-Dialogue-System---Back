@@ -44,6 +44,17 @@ public class ArticleService {
         return optionalArticle;
     }
 
+    // 增加下载量
+    public Optional<Article> incrementDownloads(Long id) {
+        Optional<Article> optionalArticle = articleRepository.findById(id);
+        if (optionalArticle.isPresent()) {
+            Article article = optionalArticle.get();
+            article.setDownloads(article.getDownloads() + 1);
+            articleRepository.save(article);
+        }
+        return optionalArticle;
+    }
+
     // 获取浏览量前8的文章
     public List<Article> getTop8ByViews() {
         return articleRepository.findTop8ByOrderByViewsDesc();
@@ -52,6 +63,11 @@ public class ArticleService {
     // 获取最新上传的前8篇文章
     public List<Article> getTop8ByUploadTime() {
         return articleRepository.findTop8ByOrderByUploadTimeDesc();
+    }
+
+    // 获取下载量前8的文章
+    public List<Article> getTop8ByDownloads() {
+        return articleRepository.findTop8ByOrderByDownloadsDesc();
     }
 
 }

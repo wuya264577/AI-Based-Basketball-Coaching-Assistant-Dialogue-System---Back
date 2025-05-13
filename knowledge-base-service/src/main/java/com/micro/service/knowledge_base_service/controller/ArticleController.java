@@ -58,4 +58,16 @@ public class ArticleController {
     public List<Article> getTop8RecentArticles() {
         return articleService.getTop8ByUploadTime();
     }
+
+    // 获取下载量最多的前8篇文章
+    @GetMapping("/downloads/top8")
+    public List<Article> getTop8ArticlesByDownloads() {
+        return articleService.getTop8ByDownloads();
+    }
+
+    @PutMapping("/downloads/increment/{id}")
+    public Article incrementDownloads(@PathVariable Long id) {
+        return articleService.incrementDownloads(id)
+                .orElseThrow(() -> new RuntimeException("Article not found with id: " + id));
+    }
 }

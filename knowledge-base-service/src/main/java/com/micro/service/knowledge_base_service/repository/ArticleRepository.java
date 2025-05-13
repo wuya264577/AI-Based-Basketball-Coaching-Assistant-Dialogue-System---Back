@@ -8,4 +8,5 @@ import java.util.List;
 public interface ArticleRepository  extends JpaRepository<Article, Long> {
     List<Article> findTop8ByOrderByViewsDesc();
     List<Article> findTop8ByOrderByUploadTimeDesc();
+    List<Article> findTop8ByOrderByDownloadsDesc();
 }
