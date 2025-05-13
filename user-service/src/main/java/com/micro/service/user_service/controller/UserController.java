@@ -60,6 +60,16 @@ public class UserController {
         return new ResponseEntity<>("Verification successful", HttpStatus.OK); // 200 OK
     }
 
+    @GetMapping("/checkEmailRegistered")
+    public ResponseEntity<String> checkEmailRegistered(@RequestParam String email) {
+        User existingUser = userService.findByEmail(email);
+        if (existingUser != null) {
+            return new ResponseEntity<>("Email already registered", HttpStatus.CONFLICT); // 409 冲突
+        } else {
+            return new ResponseEntity<>("Email available", HttpStatus.OK);
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user, @RequestParam String code) {
         // 调用验证码验证
