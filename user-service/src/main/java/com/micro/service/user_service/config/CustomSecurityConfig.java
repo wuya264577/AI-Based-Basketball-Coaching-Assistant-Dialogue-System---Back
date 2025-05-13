@@ -22,6 +22,8 @@ public class CustomSecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users/sendCode").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/checkEmailRegistered").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/users/admin/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/api/users/coach/**").hasRole("COACH")
                         .requestMatchers("/api/users/player/**").hasRole("PLAYER")
