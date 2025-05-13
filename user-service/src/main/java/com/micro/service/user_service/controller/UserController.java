@@ -1,6 +1,8 @@
 package com.micro.service.user_service.controller;
 
 import com.micro.service.user_service.config.JwtUtil;
+import com.micro.service.user_service.entity.LoginResponse;
+import com.micro.service.user_service.entity.ResetPasswordRequest;
 import com.micro.service.user_service.entity.User;
 import com.micro.service.user_service.service.EmailService;
 import com.micro.service.user_service.service.UserService;
@@ -35,14 +37,17 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/sendCode")
-    public String sendVerificationCode(@RequestParam String email) {
-        String code = String.valueOf(new Random().nextInt(1000000) + 100000);
+    public ResponseEntity<String> sendVerificationCode(@RequestParam String email) {
+        String code = String.valueOf(new Random().nextInt(900000) + 100000); // 确保是6位数
 
+        // 将验证码存入 Redis，有效期5分钟
         redisTemplate.opsForValue().set("register:" + email, code, Duration.ofMinutes(5));
 
+        // 发送验证码
         emailService.sendVerificationCode(email, code);
 
-        return "Verification code sent";
+        // 返回 200 OK 和提示信息
+        return new ResponseEntity<>("Verification code sent", HttpStatus.OK);
     }
 
     @PostMapping("/verifyCode")
@@ -56,6 +61,9 @@ public class UserController {
         if (!storedCode.equals(code)) {
             return new ResponseEntity<>("Invalid verification code", HttpStatus.BAD_REQUEST); // 400 Bad Request
         }
+
+        // 验证成功后删除验证码
+        redisTemplate.delete("register:" + email);
 
         return new ResponseEntity<>("Verification successful", HttpStatus.OK); // 200 OK
     }
@@ -110,20 +118,52 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            return "Email not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            return "Incorrect password";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password");
         }
 
         String token = JwtUtil.generateToken(user.getEmail(), user.getRole());
-        return token;
+
+        // 返回 200 OK，并返回 token 结构化信息
+        return ResponseEntity.ok(new LoginResponse(token));
     }
+
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        String email = request.getEmail();
+        String newPassword = request.getNewPassword();
+        String code = request.getCode();
+
+        // 验证验证码
+        ResponseEntity<String> verificationResponse = verifyCode(email, code);
+        if (!verificationResponse.getStatusCode().equals(HttpStatus.OK)) {
+            return verificationResponse;
+        }
+
+        // 查找用户
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            return new ResponseEntity<>("Email not found", HttpStatus.NOT_FOUND);
+        }
+
+        // 加密新密码
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+
+        // 保存用户（更新密码）
+        userService.updatePassword(user);
+
+        return new ResponseEntity<>("Password reset successful", HttpStatus.OK);
+    }
+
 
     @GetMapping("/{username}")
     public List<User> getUserByUsername(@PathVariable String username){

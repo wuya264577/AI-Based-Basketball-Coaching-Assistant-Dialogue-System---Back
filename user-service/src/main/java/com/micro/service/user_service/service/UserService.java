@@ -25,4 +25,8 @@ public class UserService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email);  // 返回单个用户对象
     }
+
+    public void updatePassword(User user) {
+        userRepository.save(user);
+    }
 }

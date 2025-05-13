@@ -13,7 +13,7 @@ public class EmailService {
 
     public void sendVerificationCode(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setSubject("【注册验证码】");
+        message.setSubject("【验证码】");
         message.setText("您的验证码是：" + code + "，有效期5分钟。请勿泄露给他人。");
         message.setTo(to);
         message.setFrom("2645779070@qq.com");
