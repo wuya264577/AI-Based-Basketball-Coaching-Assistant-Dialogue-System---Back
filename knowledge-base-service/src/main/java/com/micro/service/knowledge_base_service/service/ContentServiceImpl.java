@@ -5,6 +5,7 @@ import com.micro.service.knowledge_base_service.entity.SubsectionVideo;
 import com.micro.service.knowledge_base_service.mapper.ContentMapper;
 import com.micro.service.knowledge_base_service.mapper.SubsectionImageMapper;
 import com.micro.service.knowledge_base_service.mapper.SubsectionVideoMapper;
+import com.micro.service.knowledge_base_service.vo.ContentWithSubsectionVO;
 import com.micro.service.knowledge_base_service.vo.SubsectionContentVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -56,5 +57,11 @@ public class ContentServiceImpl implements ContentService {
         result.setVideos(videos);
 
         return result;
+    }
+
+    @Override
+    public List<ContentWithSubsectionVO> getContentBySectionName(String sectionName) {
+        // 调用 mapper 中返回多个结果的方法
+        return contentMapper.findContentBySectionName(sectionName);
     }
 }

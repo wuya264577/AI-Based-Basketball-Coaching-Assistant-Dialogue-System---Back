@@ -1,6 +1,7 @@
 package com.micro.service.knowledge_base_service.controller;
 
 import com.micro.service.knowledge_base_service.service.ContentService;
+import com.micro.service.knowledge_base_service.vo.ContentWithSubsectionVO;
 import com.micro.service.knowledge_base_service.vo.SubsectionContentVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/content")
@@ -25,4 +28,13 @@ public class ContentController {
         SubsectionContentVO result = contentService.getSubsectionContent(chapterId, sectionId, subsectionId);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/by-section-name")
+    public ResponseEntity<List<ContentWithSubsectionVO>> getContentBySectionName(
+            @RequestParam String sectionName) {
+
+        List<ContentWithSubsectionVO> result = contentService.getContentBySectionName(sectionName);
+        return ResponseEntity.ok(result);
+    }
+
 }
