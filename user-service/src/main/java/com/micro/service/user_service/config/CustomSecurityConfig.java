@@ -1,5 +1,6 @@
 package com.micro.service.user_service.config;
 
+import io.lettuce.core.ScoredValueScanCursor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,8 @@ public class CustomSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.POST, "/api/users/sendCode").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
@@ -29,8 +32,7 @@ public class CustomSecurityConfig {
                         .requestMatchers("/api/users/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // 加这一行！
-                .csrf(AbstractHttpConfigurer::disable);
+                .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
