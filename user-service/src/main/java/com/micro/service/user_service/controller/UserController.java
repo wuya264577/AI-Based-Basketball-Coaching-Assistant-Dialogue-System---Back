@@ -131,9 +131,10 @@ public class UserController {
 
         String token = JwtUtil.generateToken(user.getEmail(), user.getRole());
 
-        // 返回 200 OK，并返回 token 结构化信息
-        return ResponseEntity.ok(new LoginResponse(token));
+        // 返回 token 和 userId
+        return ResponseEntity.ok(new LoginResponse(token, user.getId()));
     }
+
 
 
     @PostMapping("/resetPassword")
