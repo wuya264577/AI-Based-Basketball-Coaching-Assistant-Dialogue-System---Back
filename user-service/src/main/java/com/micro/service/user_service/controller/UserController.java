@@ -151,8 +151,8 @@ public class UserController {
 
         // 查找用户
         User user = userService.findByEmail(email);
-        if (user == null) {
-            return new ResponseEntity<>("Email not found", HttpStatus.NOT_FOUND);
+            if (user == null) {
+                return new ResponseEntity<>("Email not found", HttpStatus.NOT_FOUND);
         }
 
         // 加密新密码
