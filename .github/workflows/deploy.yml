@@ -1,9 +1,9 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   build-and-push:
@@ -19,8 +19,14 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build Docker image
-        run: docker build -t 2252635/knowledge-base-service:latest .
+      - name: Build knowledge-base-service image
+        run: docker build -t 2252635/knowledge-base-service:latest ./knowledge-base-service
 
-      - name: Push Docker image
+      - name: Push knowledge-base-service image
         run: docker push 2252635/knowledge-base-service:latest
+
+      - name: Build user-service image
+        run: docker build -t 2252635/user-service:latest ./user-service
+
+      - name: Push user-service image
+        run: docker push 2252635/user-service:latest
