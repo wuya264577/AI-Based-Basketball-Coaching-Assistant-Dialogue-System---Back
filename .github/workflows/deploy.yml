@@ -13,20 +13,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build knowledge-base-service with Maven
+        working-directory: ./knowledge-base-service
+        run: mvn clean package -DskipTests
+
+      - name: Build user-service with Maven
+        working-directory: ./user-service
+        run: mvn clean package -DskipTests
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build knowledge-base-service image
+      - name: Build knowledge-base-service Docker image
         run: docker build -t 2252635/knowledge-base-service:latest ./knowledge-base-service
 
-      - name: Push knowledge-base-service image
+      - name: Push knowledge-base-service Docker image
         run: docker push 2252635/knowledge-base-service:latest
 
-      - name: Build user-service image
+      - name: Build user-service Docker image
         run: docker build -t 2252635/user-service:latest ./user-service
 
-      - name: Push user-service image
+      - name: Push user-service Docker image
         run: docker push 2252635/user-service:latest
