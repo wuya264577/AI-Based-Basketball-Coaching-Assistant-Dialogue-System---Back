@@ -11,12 +11,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 知识库搜索控制器
+ * 提供知识库内容的搜索功能
+ */
 @RestController
 @RequestMapping("/api/search")
 public class SearchController {
+    
+    /**
+     * 搜索服务接口
+     * 用于处理知识库内容的搜索请求
+     */
     @Autowired
     private SearchService searchService;
 
+    /**
+     * 根据关键词搜索知识库内容
+     * 
+     * @param request 搜索请求对象，包含搜索关键词
+     * @return 搜索结果列表，包含匹配的知识库内容
+     */
     @PostMapping
     public List<SearchResult> search(@RequestBody SearchRequest request) {
         return searchService.searchByKeyword(request.getKeyword());
