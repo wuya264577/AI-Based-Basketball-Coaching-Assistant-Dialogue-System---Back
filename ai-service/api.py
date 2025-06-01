@@ -7,7 +7,7 @@ import uvicorn
 # 创建FastAPI应用
 app = FastAPI(
     title="篮球知识问答系统",
-    description="基于LangChain和文心一言的篮球知识问答API",
+    description="基于LangChain和文心一言的篮球知识问答API，支持多轮对话",
     version="1.0.0"
 )
 
@@ -39,17 +39,19 @@ async def startup_event():
     try:
         qa_system = BasketballQA()
         qa_system.load_document("mybook.txt")
+        print("问答系统初始化成功！")
     except Exception as e:
         print(f"初始化失败: {str(e)}")
         raise
 
 @app.post("/api/ask", response_model=Answer)
 async def ask_question(question: Question):
-    """问答接口"""
+    """问答接口，支持多轮对话"""
     if not qa_system:
         raise HTTPException(status_code=500, detail="系统未初始化")
     
     try:
+        # 调用问答系统
         answer = qa_system.answer_question(question.question)
         return Answer(answer=answer, status="success")
     except Exception as e:
