@@ -30,10 +30,10 @@ public class ContentController {
     /**
      * 获取指定章节、小节和子节的内容
      * 
-     * @param chapterId 章节ID
-     * @param sectionId 小节ID
-     * @param subsectionId 子节ID
-     * @return 包含子节内容的响应实体
+     * param chapterId 章节ID
+     * param sectionId 小节ID
+     * param subsectionId 子节ID
+     * return 包含子节内容的响应实体
      */
     @GetMapping
     public ResponseEntity<SubsectionContentVO> getSubsectionContent(
@@ -48,8 +48,8 @@ public class ContentController {
     /**
      * 根据小节名称获取相关内容
      * 
-     * @param sectionName 小节名称
-     * @return 包含小节内容的响应实体列表
+     * param sectionName 小节名称
+     * return 包含小节内容的响应实体列表
      */
     @GetMapping("/by-section-name")
     public ResponseEntity<List<ContentWithSubsectionVO>> getContentBySectionName(

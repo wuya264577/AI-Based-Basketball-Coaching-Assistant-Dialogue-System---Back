@@ -29,8 +29,8 @@ public class SearchController {
     /**
      * 根据关键词搜索知识库内容
      * 
-     * @param request 搜索请求对象，包含搜索关键词
-     * @return 搜索结果列表，包含匹配的知识库内容
+     * param request 搜索请求对象，包含搜索关键词
+     * return 搜索结果列表，包含匹配的知识库内容
      */
     @PostMapping
     public List<SearchResult> search(@RequestBody SearchRequest request) {

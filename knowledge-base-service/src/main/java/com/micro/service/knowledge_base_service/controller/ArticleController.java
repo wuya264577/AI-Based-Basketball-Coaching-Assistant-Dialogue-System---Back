@@ -27,8 +27,8 @@ public class ArticleController {
     /**
      * 添加新文章
      * 
-     * @param article 文章信息
-     * @return 添加成功后的文章对象
+     * article 文章信息
+     *  添加成功后的文章对象
      */
     @PostMapping
     public Article addArticle(@RequestBody Article article) {
@@ -40,7 +40,7 @@ public class ArticleController {
     /**
      * 删除指定文章
      * 
-     * @param id 文章ID
+     * id 文章ID
      */
     @DeleteMapping("/{id}")
     public void deleteArticle(@PathVariable Long id) {
@@ -50,7 +50,7 @@ public class ArticleController {
     /**
      * 获取所有文章列表
      * 
-     * @return 文章列表
+     *  文章列表
      */
     @GetMapping
     public List<Article> getAllArticles() {
@@ -60,8 +60,8 @@ public class ArticleController {
     /**
      * 根据ID获取单篇文章
      * 
-     * @param id 文章ID
-     * @return 文章信息（如果存在）
+     * am id 文章ID
+     * return 文章信息（如果存在）
      */
     @GetMapping("/{id}")
     public Optional<Article> getArticleById(@PathVariable Long id) {
@@ -71,9 +71,9 @@ public class ArticleController {
     /**
      * 增加文章浏览量
      * 
-     * @param id 文章ID
-     * @return 更新后的文章对象
-     * @throws RuntimeException 当文章不存在时抛出异常
+     * param id 文章ID
+     * return 更新后的文章对象
+     * throws RuntimeException 当文章不存在时抛出异常
      */
     @PutMapping("/views/increment/{id}")
     public Article incrementViews(@PathVariable Long id) {
@@ -84,7 +84,7 @@ public class ArticleController {
     /**
      * 获取浏览量最多的前8篇文章
      * 
-     * @return 文章列表
+     * return 文章列表
      */
     @GetMapping("/views/top8")
     public List<Article> getTop8ArticlesByViews() {
@@ -94,7 +94,7 @@ public class ArticleController {
     /**
      * 获取上传时间最新的前8篇文章
      * 
-     * @return 文章列表
+     * return 文章列表
      */
     @GetMapping("/recent/top8")
     public List<Article> getTop8RecentArticles() {
@@ -104,7 +104,7 @@ public class ArticleController {
     /**
      * 获取下载量最多的前8篇文章
      * 
-     * @return 文章列表
+     *return 文章列表
      */
     @GetMapping("/downloads/top8")
     public List<Article> getTop8ArticlesByDownloads() {
@@ -114,9 +114,9 @@ public class ArticleController {
     /**
      * 增加文章下载量
      * 
-     * @param id 文章ID
-     * @return 更新后的文章对象
-     * @throws RuntimeException 当文章不存在时抛出异常
+     * param id 文章ID
+     * return 更新后的文章对象
+     * throws RuntimeException 当文章不存在时抛出异常
      */
     @PutMapping("/downloads/increment/{id}")
     public Article incrementDownloads(@PathVariable Long id) {
