@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 from app import BasketballQA
 import uvicorn
 
@@ -27,9 +28,10 @@ qa_system = None
 class Question(BaseModel):
     question: str
 
-# 定义响应模型
+# 定义响应模型 - 新增reasoning字段
 class Answer(BaseModel):
     answer: str
+    reasoning: Optional[str] = None  # 思考过程是可选的
     status: str
 
 @app.on_event("startup")
@@ -46,15 +48,41 @@ async def startup_event():
 
 @app.post("/api/ask", response_model=Answer)
 async def ask_question(question: Question):
-    """问答接口，支持多轮对话"""
+    """问答接口，支持多轮对话，返回答案和思考过程"""
     if not qa_system:
         raise HTTPException(status_code=500, detail="系统未初始化")
     
     try:
         # 调用问答系统
-        answer = qa_system.answer_question(question.question)
-        return Answer(answer=answer, status="success")
+        response = qa_system.answer_question(question.question)
+        
+        # 调试打印
+        print("原始响应:", response)
+        
+        # 处理不同类型的返回结果
+        if isinstance(response, dict):
+            # 如果返回字典，提取reasoning和answer
+            reasoning = response.get("reasoning", "")
+            answer = response.get("answer", "")
+            
+            # 如果answer为空但reasoning有内容，则使用reasoning作为answer
+            if not answer and reasoning:
+                answer = reasoning.split("\n")[-1]  # 取最后一行作为答案
+                reasoning = "\n".join(reasoning.split("\n")[:-1])  # 其余部分作为思考过程
+            elif not reasoning and answer:
+                reasoning = answer  # 如果没有思考过程，使用答案作为思考过程
+        else:
+            # 如果不是字典，全部作为answer
+            answer = str(response)
+            reasoning = answer
+        
+        return Answer(
+            answer=answer,
+            reasoning=reasoning if reasoning != answer else None,  # 如果相同就不重复返回
+            status="success"
+        )
     except Exception as e:
+        print(f"接口错误: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/health")
@@ -63,4 +91,4 @@ async def health_check():
     return {"status": "healthy"}
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True) 
+    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

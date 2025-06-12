@@ -15,6 +15,9 @@ import urllib3
 import warnings
 import torch
 from huggingface_hub import snapshot_download
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 
 # 禁用SSL警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -22,19 +25,42 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 加载环境变量
 load_dotenv()
 
+# 定义响应模型
+class Answer(BaseModel):
+    reasoning: str
+    answer: str
+
+    class Config:
+        from_attributes = True
+
+app = FastAPI()
+
+@app.post("/ask")
+async def ask_question(question: str) -> Dict[str, str]:
+    try:
+        qa_system = BasketballQA()
+        qa_system.load_document("mybook.txt")
+        result = qa_system.answer_question(question)
+        return {
+            "reasoning": result["reasoning"],
+            "answer": result["answer"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 class BasketballQA:
     def __init__(self):
         # 初始化文本分割器
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1500,  # 增加块大小
-            chunk_overlap=100,  # 减少重叠
+            chunk_size=1000,
+            chunk_overlap=200,
             length_function=len,
         )
         
         # 配置重试策略
         retry_strategy = Retry(
-            total=3,  # 减少重试次数
-            backoff_factor=1,  # 减少重试间隔
+            total=5,
+            backoff_factor=2,
             status_forcelist=[429, 500, 502, 503, 504],
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -73,7 +99,7 @@ class BasketballQA:
         
         # 初始化对话记忆
         self.memory = ConversationBufferWindowMemory(
-            k=3,  # 减少记忆轮数
+            k=5,  # 保留最近5轮对话
             memory_key="chat_history",
             return_messages=True
         )
@@ -92,6 +118,10 @@ class BasketballQA:
 回答：""",
             input_variables=["chat_history", "context", "question"]
         )
+        
+        # 讯飞星火API配置
+        self.api_key = "Bearer BpGFNOZKthJXdQyRalAg:raDFOpsWmfsEiussDfRj"  # 请替换为您的API密钥
+        self.url = "https://spark-api-open.xf-yun.com/v2/chat/completions"
         
     def load_document(self, file_path):
         """加载文档并创建向量数据库"""
@@ -117,148 +147,120 @@ class BasketballQA:
             print(f"加载文档时出错: {str(e)}")
             raise
         
-    def query_ernie(self, question, context):
-        """调用文心一言API"""
+    def query_spark(self, question, context=None):
+        """调用讯飞星火API"""
         try:
-            url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions"
-            
+            # 准备请求头
             headers = {
-                "Content-Type": "application/json"
+                'Authorization': self.api_key,
+                'content-type': "application/json"
             }
             
-            # 获取对话历史
-            chat_history = self.memory.load_memory_variables({})["chat_history"]
-            chat_history_str = "\n".join([f"问：{msg.content}" if msg.type == "human" else f"答：{msg.content}" for msg in chat_history])
+            # 准备消息
+            if context:  # 如果有上下文，使用完整提示
+                chat_history = self.memory.load_memory_variables({})["chat_history"]
+                chat_history_str = "\n".join([f"问：{msg.content}" if msg.type == "human" else f"答：{msg.content}" for msg in chat_history])
+                prompt = self.prompt_template.format(
+                    chat_history=chat_history_str,
+                    context=context,
+                    question=question
+                )
+                messages = [{"role": "user", "content": prompt}]
+            else:  # 如果没有上下文，直接使用问题
+                messages = [{"role": "user", "content": question}]
             
-            # 使用提示模板
-            prompt = self.prompt_template.format(
-                chat_history=chat_history_str,
-                context=context,
-                question=question
-            )
-            
-            data = {
-                "messages": [
+            # 准备请求体
+            body = {
+                "model": "x1",
+                "user": "user_id",
+                "messages": messages,
+                "stream": True,
+                "tools": [
                     {
-                        "role": "user",
-                        "content": prompt
+                        "type": "web_search",
+                        "web_search": {
+                            "enable": True,
+                            "search_mode": "deep"
+                        }
                     }
                 ]
             }
             
-            # 获取访问令牌
-            token_url = "https://aip.baidubce.com/oauth/2.0/token"
-            token_params = {
-                "grant_type": "client_credentials",
-                "client_id": os.getenv("ERNIE_API_KEY"),
-                "client_secret": os.getenv("ERNIE_SECRET_KEY")
+            # 发送请求
+            response = requests.post(url=self.url, json=body, headers=headers, stream=True)
+            full_response = ""
+            reasoning_content = ""
+            isFirstContent = True
+            
+            for chunks in response.iter_lines():
+                if chunks and '[DONE]' not in str(chunks):
+                    data_org = chunks[6:]
+                    chunk = json.loads(data_org)
+                    text = chunk['choices'][0]['delta']
+                    
+                    # 处理思维链内容
+                    if 'reasoning_content' in text and text['reasoning_content']:
+                        reasoning_content += text["reasoning_content"]
+                        print(text["reasoning_content"], end="")
+                    
+                    # 处理最终结果
+                    if 'content' in text and text['content']:
+                        content = text["content"]
+                        if isFirstContent:
+                            print("\n*******************以上为思维链内容，模型回复内容如下********************\n")
+                            isFirstContent = False
+                        print(content, end="")
+                        full_response += content
+            
+            # 保存对话历史
+            self.memory.save_context({"input": question}, {"output": full_response})
+            
+            # 返回思考过程和最终结果
+            return {
+                "reasoning": reasoning_content,
+                "answer": full_response
             }
-            
-            # 设置超时和重试
-            session = requests.Session()
-            retry_strategy = Retry(
-                total=1,  # 只重试一次
-                backoff_factor=1,
-                status_forcelist=[429, 500, 502, 503, 504]
-            )
-            adapter = HTTPAdapter(max_retries=retry_strategy)
-            session.mount("https://", adapter)
-            
-            # 获取token
-            token_response = session.post(
-                token_url, 
-                params=token_params, 
-                verify=False,
-                timeout=5  # 减少超时时间
-            )
-            access_token = token_response.json()["access_token"]
-            
-            # 调用文心一言API
-            response = session.post(
-                f"{url}?access_token={access_token}",
-                headers=headers,
-                json=data,
-                verify=False,
-                timeout=15  # 减少超时时间
-            )
-            
-            if response.status_code == 200:
-                result = response.json()["result"]
-                # 保存对话历史
-                self.memory.save_context({"input": question}, {"output": result})
-                return result
-            else:
-                print(f"API返回错误状态码: {response.status_code}")
-                return "抱歉，API调用失败，请稍后重试。"
-                
-        except requests.exceptions.Timeout:
-            print("请求超时，直接调用文心一言")
-            # 直接使用问题调用文心一言，不使用上下文
-            try:
-                # 创建新的session
-                new_session = requests.Session()
-                new_session.mount("https://", HTTPAdapter(max_retries=1))
-                
-                # 重新获取token
-                token_response = new_session.post(
-                    token_url,
-                    params=token_params,
-                    verify=False,
-                    timeout=5  # 减少超时时间
-                )
-                new_access_token = token_response.json()["access_token"]
-                
-                # 直接使用问题调用API
-                data = {
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": question
-                        }
-                    ]
-                }
-                response = new_session.post(
-                    f"{url}?access_token={new_access_token}",
-                    headers=headers,
-                    json=data,
-                    verify=False,
-                    timeout=15  # 减少超时时间
-                )
-                if response.status_code == 200:
-                    result = response.json()["result"]
-                    # 保存对话历史
-                    self.memory.save_context({"input": question}, {"output": result})
-                    return result
-                else:
-                    return "抱歉，API调用失败，请稍后重试。"
-            except Exception as e:
-                print(f"直接调用文心一言时出错: {str(e)}")
-                return "抱歉，系统出现错误，请稍后重试。"
-                
-        except requests.exceptions.ConnectionError as e:
-            print(f"连接错误: {str(e)}")
-            return "抱歉，网络连接出现问题，请稍后重试。"
             
         except Exception as e:
             print(f"调用API时出错: {str(e)}")
-            return "抱歉，系统出现错误，请稍后重试。"
+            return {
+                "reasoning": "",
+                "answer": "抱歉，系统出现错误，请稍后重试。"
+            }
     
     def answer_question(self, question):
         """回答问题"""
         if not self.vectorstore:
-            return "请先加载文档！"
+            return {
+                "reasoning": "",
+                "answer": "请先加载文档！"
+            }
         
         try:
             # 检索相关文档
-            docs = self.vectorstore.similarity_search(question, k=2)  # 减少检索数量
+            docs = self.vectorstore.similarity_search(question, k=3)
             context = "\n".join([doc.page_content for doc in docs])
             
-            # 调用文心一言生成回答
-            answer = self.query_ernie(question, context)
-            return answer
+            # 调用星火大模型生成回答
+            return self.query_spark(question, context)
+        except requests.exceptions.Timeout:
+            print("向量检索超时，直接使用星火大模型回答...")
+            # 直接调用星火大模型，不提供上下文
+            try:
+                return self.query_spark(question)
+            except Exception as e:
+                print(f"直接调用星火大模型时出错: {str(e)}")
+                return {
+                    "reasoning": "",
+                    "answer": "抱歉，系统出现错误，请稍后重试。"
+                }
+                
         except Exception as e:
             print(f"回答问题时出错: {str(e)}")
-            return "抱歉，处理您的问题时出现错误，请稍后重试。"
+            return {
+                "reasoning": "",
+                "answer": "抱歉，处理您的问题时出现错误，请稍后重试。"
+            }
 
 def main():
     print("正在初始化篮球知识问答系统...")
@@ -277,8 +279,9 @@ def main():
             if question.lower() in ['退出', 'quit', 'exit']:
                 break
                 
-            answer = qa_system.answer_question(question)
-            print("\n回答：", answer)
+            result = qa_system.answer_question(question)
+            print("\n思考过程：", result["reasoning"])
+            print("\n回答：", result["answer"])
     except Exception as e:
         print(f"系统运行出错: {str(e)}")
         print("请检查网络连接和API密钥是否正确配置。")
