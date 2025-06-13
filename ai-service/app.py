@@ -116,18 +116,19 @@ class BasketballQA:
             return_messages=True
         )
         
-        # 初始化提示模板
+        # 优化后的提示模板
         self.prompt_template = PromptTemplate(
-            template="""你是一个专业的篮球知识问答助手。请基于以下上下文和对话历史回答问题。如果上下文中没有相关信息，请自行补充。
-
-对话历史：
-{chat_history}
-
-上下文：{context}
-
-问题：{question}
-
-回答：""",
+            template=(
+                "你是专业的篮球知识问答助手，请用简洁、专业的语言回答用户问题。\n"
+                "请优先结合下方上下文和对话历史作答，如无相关信息可基于常识补充。\n"
+                "如有引用上下文内容，请在答案中注明。\n"
+                "如问题有多个步骤，请分点说明。\n"
+                "请用中文回答。\n\n"
+                "【对话历史】\n{chat_history}\n\n"
+                "【上下文】\n{context}\n\n"
+                "【问题】\n{question}\n\n"
+                "【回答】："
+            ),
             input_variables=["chat_history", "context", "question"]
         )
         
