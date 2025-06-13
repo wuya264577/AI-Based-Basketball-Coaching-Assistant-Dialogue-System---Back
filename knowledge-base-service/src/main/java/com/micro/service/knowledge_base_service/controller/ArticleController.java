@@ -2,6 +2,8 @@ package com.micro.service.knowledge_base_service.controller;
 
 import com.micro.service.knowledge_base_service.entity.Article;
 import com.micro.service.knowledge_base_service.service.ArticleService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,8 @@ import java.util.Optional;
 @RequestMapping("/api/articles")
 public class ArticleController {
     
+    private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
+
     /**
      * 文章服务接口
      * 用于处理文章的增删改查等业务逻辑
@@ -34,7 +38,9 @@ public class ArticleController {
     public Article addArticle(@RequestBody Article article) {
         article.setUploadTime(LocalDateTime.now());
         article.setDownloads(0);
-        return articleService.addArticle(article);
+        Article saved = articleService.addArticle(article);
+        logger.info("添加新文章: {}", article.getTitle());
+        return saved;
     }
 
     /**
@@ -45,6 +51,7 @@ public class ArticleController {
     @DeleteMapping("/{id}")
     public void deleteArticle(@PathVariable Long id) {
         articleService.deleteArticle(id);
+        logger.info("删除文章，ID: {}", id);
     }
 
     /**
@@ -54,6 +61,7 @@ public class ArticleController {
      */
     @GetMapping
     public List<Article> getAllArticles() {
+        logger.debug("获取所有文章列表");
         return articleService.getAllArticles();
     }
 
@@ -65,6 +73,7 @@ public class ArticleController {
      */
     @GetMapping("/{id}")
     public Optional<Article> getArticleById(@PathVariable Long id) {
+        logger.debug("根据ID获取文章: {}", id);
         return articleService.getArticleById(id);
     }
 
@@ -77,8 +86,15 @@ public class ArticleController {
      */
     @PutMapping("/views/increment/{id}")
     public Article incrementViews(@PathVariable Long id) {
-        return articleService.incrementViews(id)
-                .orElseThrow(() -> new RuntimeException("Article not found with id: " + id));
+        try {
+            Article updated = articleService.incrementViews(id)
+                    .orElseThrow(() -> new RuntimeException("Article not found with id: " + id));
+            logger.info("增加文章浏览量，ID: {}", id);
+            return updated;
+        } catch (Exception e) {
+            logger.error("增加浏览量失败，ID: {}，异常: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -88,6 +104,7 @@ public class ArticleController {
      */
     @GetMapping("/views/top8")
     public List<Article> getTop8ArticlesByViews() {
+        logger.debug("获取浏览量最多的前8篇文章");
         return articleService.getTop8ByViews();
     }
 
@@ -98,6 +115,7 @@ public class ArticleController {
      */
     @GetMapping("/recent/top8")
     public List<Article> getTop8RecentArticles() {
+        logger.debug("获取上传时间最新的前8篇文章");
         return articleService.getTop8ByUploadTime();
     }
 
@@ -108,6 +126,7 @@ public class ArticleController {
      */
     @GetMapping("/downloads/top8")
     public List<Article> getTop8ArticlesByDownloads() {
+        logger.debug("获取下载量最多的前8篇文章");
         return articleService.getTop8ByDownloads();
     }
 
@@ -120,7 +139,14 @@ public class ArticleController {
      */
     @PutMapping("/downloads/increment/{id}")
     public Article incrementDownloads(@PathVariable Long id) {
-        return articleService.incrementDownloads(id)
-                .orElseThrow(() -> new RuntimeException("Article not found with id: " + id));
+        try {
+            Article updated = articleService.incrementDownloads(id)
+                    .orElseThrow(() -> new RuntimeException("Article not found with id: " + id));
+            logger.info("增加文章下载量，ID: {}", id);
+            return updated;
+        } catch (Exception e) {
+            logger.error("增加下载量失败，ID: {}，异常: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 }

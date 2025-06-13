@@ -18,12 +18,24 @@ from huggingface_hub import snapshot_download
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+import logging
 
 # 禁用SSL警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 加载环境变量
 load_dotenv()
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s',
+    handlers=[
+        logging.FileHandler('logs/ai-service.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # 定义响应模型
 class Answer(BaseModel):
@@ -263,27 +275,23 @@ class BasketballQA:
             }
 
 def main():
-    print("正在初始化篮球知识问答系统...")
+    logger.info("正在初始化篮球知识问答系统...")
     try:
-        # 初始化问答系统
         qa_system = BasketballQA()
-        
-        # 加载文档
         qa_system.load_document("mybook.txt")
-        
-        print("\n篮球知识问答系统已启动！")
-        print("您可以开始提问了，输入'退出'结束对话。")
-        
+        logger.info("篮球知识问答系统已启动！您可以开始提问了，输入'退出'结束对话。")
         while True:
             question = input("\n请输入您的问题：")
             if question.lower() in ['退出', 'quit', 'exit']:
                 break
-                
             result = qa_system.answer_question(question)
+            logger.info(f"思考过程：{result['reasoning']}")
+            logger.info(f"回答：{result['answer']}")
             print("\n思考过程：", result["reasoning"])
             print("\n回答：", result["answer"])
     except Exception as e:
-        print(f"系统运行出错: {str(e)}")
+        logger.error(f"系统运行出错: {str(e)}", exc_info=True)
+        print("系统运行出错: {}".format(str(e)))
         print("请检查网络连接和API密钥是否正确配置。")
 
 if __name__ == "__main__":

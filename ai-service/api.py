@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from app import BasketballQA
 import uvicorn
+import logging
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -34,6 +35,17 @@ class Answer(BaseModel):
     reasoning: Optional[str] = None  # 思考过程是可选的
     status: str
 
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s',
+    handlers=[
+        logging.FileHandler('logs/ai-service.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
 @app.on_event("startup")
 async def startup_event():
     """服务启动时初始化问答系统"""
@@ -41,15 +53,16 @@ async def startup_event():
     try:
         qa_system = BasketballQA()
         qa_system.load_document("mybook.txt")
-        print("问答系统初始化成功！")
+        logger.info("问答系统初始化成功！")
     except Exception as e:
-        print(f"初始化失败: {str(e)}")
+        logger.error(f"初始化失败: {str(e)}", exc_info=True)
         raise
 
 @app.post("/api/ask", response_model=Answer)
 async def ask_question(question: Question):
     """问答接口，支持多轮对话，返回答案和思考过程"""
     if not qa_system:
+        logger.error("系统未初始化")
         raise HTTPException(status_code=500, detail="系统未初始化")
     
     try:
@@ -57,7 +70,7 @@ async def ask_question(question: Question):
         response = qa_system.answer_question(question.question)
         
         # 调试打印
-        print("原始响应:", response)
+        logger.debug(f"原始响应: {response}")
         
         # 处理不同类型的返回结果
         if isinstance(response, dict):
@@ -82,7 +95,7 @@ async def ask_question(question: Question):
             status="success"
         )
     except Exception as e:
-        print(f"接口错误: {str(e)}")
+        logger.error(f"接口错误: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/health")
