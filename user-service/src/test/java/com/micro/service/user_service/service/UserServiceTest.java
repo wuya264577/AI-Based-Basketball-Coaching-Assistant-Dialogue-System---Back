@@ -129,17 +129,14 @@ public class UserServiceTest {
     public void testRegisterUser_DuplicateEmail() {
         // 配置mock行为
         when(userRepository.findByEmail("test@example.com")).thenReturn(mockUser);
-        when(userRepository.save(any(User.class))).thenReturn(mockUser);
 
-        // 执行测试
-        User result = userService.registerUser(mockUser);
-
-        // 验证结果
-        assertNotNull(result);
-        assertEquals(mockUser.getEmail(), result.getEmail());
+        // 执行测试并验证异常
+        assertThrows(RuntimeException.class, () -> {
+            userService.registerUser(mockUser);
+        });
 
         // 验证mock方法调用
-        //verify(userRepository).findByEmail("test@example.com");
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).findByEmail("test@example.com");
+        verify(userRepository, never()).save(any(User.class));
     }
 }

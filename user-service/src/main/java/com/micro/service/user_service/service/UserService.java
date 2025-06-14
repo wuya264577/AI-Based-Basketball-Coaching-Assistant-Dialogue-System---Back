@@ -19,6 +19,13 @@ public class UserService {
     private UserRepository userRepository;
 
     public User registerUser(User user){
+        // Check if email already exists
+        User existingUser = userRepository.findByEmail(user.getEmail());
+        if (existingUser != null) {
+            logger.warn("注册失败: 邮箱 {} 已存在", user.getEmail());
+            throw new RuntimeException("Email already exists");
+        }
+        
         User saved = userRepository.save(user);
         logger.info("注册用户: {}", user.getEmail());
         return saved;
