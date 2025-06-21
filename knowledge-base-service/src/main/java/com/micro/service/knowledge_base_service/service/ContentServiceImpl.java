@@ -14,18 +14,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// 内容服务实现，负责知识库内容的查询和多媒体内容整合
 @Service
 public class ContentServiceImpl implements ContentService {
 
+    // 注入内容数据访问对象
     @Autowired
     private ContentMapper contentMapper;
 
+    // 注入图片数据访问对象
     @Autowired
     private SubsectionImageMapper imageMapper;
 
+    // 注入视频数据访问对象
     @Autowired
     private SubsectionVideoMapper videoMapper;
 
+    // 获取指定章节、小节和子节的内容，包含文本、图片和视频
     @Override
     public SubsectionContentVO getSubsectionContent(String chapterId, String sectionId, String subsectionId) {
         SubsectionContentVO result = new SubsectionContentVO();
@@ -63,7 +68,7 @@ public class ContentServiceImpl implements ContentService {
         return result;
     }
 
-
+    // 根据小节名称获取相关内容列表
     @Override
     public List<ContentWithSubsectionVO> getContentBySectionName(String sectionName) {
         // 调用 mapper 中返回多个结果的方法

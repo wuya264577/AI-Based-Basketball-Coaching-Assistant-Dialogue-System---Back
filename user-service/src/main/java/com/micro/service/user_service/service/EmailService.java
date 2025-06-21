@@ -5,12 +5,15 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+// 邮件服务，负责发送邮箱验证码等邮件
 @Service
 public class EmailService {
 
+    // 注入邮件发送器
     @Autowired
     private JavaMailSender mailSender;
 
+    // 发送验证码邮件到指定邮箱
     public void sendVerificationCode(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setSubject("【验证码】");
